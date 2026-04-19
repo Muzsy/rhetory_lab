@@ -158,7 +158,7 @@ class _ScenariosList extends ConsumerWidget {
           }).eq('id', scenarioId);
           break;
       }
-      ref.refresh(adminScenariosProvider);
+      ref.invalidate(adminScenariosProvider);
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Művelet sikeres!')),
@@ -229,7 +229,7 @@ class _ReportsList extends ConsumerWidget {
         'handled_by': supabase.auth.currentUser!.id,
         'handled_at': DateTime.now().toIso8601String(),
       }).eq('id', reportId);
-      ref.refresh(openReportsProvider);
+      ref.invalidate(openReportsProvider);
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

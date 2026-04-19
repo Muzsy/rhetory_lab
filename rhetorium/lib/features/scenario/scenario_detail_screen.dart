@@ -93,8 +93,8 @@ class _ScenarioDetailScreenState extends ConsumerState<ScenarioDetailScreen> {
       });
       
       _submissionController.clear();
-      ref.refresh(scenarioSubmissionsProvider(widget.scenarioId));
-      ref.refresh(mySubmissionProvider(widget.scenarioId));
+      ref.invalidate(scenarioSubmissionsProvider(widget.scenarioId));
+      ref.invalidate(mySubmissionProvider(widget.scenarioId));
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -121,7 +121,7 @@ class _ScenarioDetailScreenState extends ConsumerState<ScenarioDetailScreen> {
           'user_id': userId,
         });
       }
-      ref.refresh(scenarioSubmissionsProvider(widget.scenarioId));
+      ref.invalidate(scenarioSubmissionsProvider(widget.scenarioId));
     } catch (e) {
       // Ignore errors silently
     }
@@ -198,7 +198,7 @@ class _ScenarioDetailScreenState extends ConsumerState<ScenarioDetailScreen> {
                       ),
                     ),
               loading: () => const LinearProgressIndicator(),
-              error: (_, __) => const SizedBox(),
+              error: (e, s) => const SizedBox(),
             ),
             const Divider(),
             Expanded(
