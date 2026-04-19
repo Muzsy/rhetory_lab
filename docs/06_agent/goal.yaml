@@ -13,6 +13,10 @@ source_of_truth:
     - agent_master_prompt.md
     - definition_of_done.md
     - execution_notes.md
+    - ../04_data_backend/strict_data_model_spec.md
+    - ../04_data_backend/strict_rls_spec.md
+    - ../04_data_backend/api_contracts_backend_actions.md
+    - ../04_data_backend/validation_state_transitions.md
 
 global_rules:
   do_not_expand_scope: true
@@ -37,6 +41,8 @@ global_rules:
 frozen_decisions:
   scenario_creation: admin_only
   admin_role_storage: profiles.is_admin
+  admin_bootstrap: manual_via_supabase_dashboard
+  admin_seed_policy: no_admin_in_seed_only_demo_users
   evaluation: like_unlike_only
   unlike_meaning: like_withdrawal
   self_like_allowed: false
