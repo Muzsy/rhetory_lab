@@ -1,3 +1,4 @@
 # Temporary files
 tmp/
 .env.local
+rhetorium/android-studio-*.tar.gz
