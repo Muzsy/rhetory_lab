@@ -1,0 +1,242 @@
+project:
+  name: rhetorium_mvp
+  product_focus: retorikai_szituaciokezeles
+  stack:
+    mobile: flutter_monorepo
+    backend: supabase
+    platform: android
+  release_mode: closed_beta
+
+source_of_truth:
+  required_documents:
+    - frozen_product_decisions.md
+    - agent_master_prompt.md
+    - definition_of_done.md
+    - execution_notes.md
+
+global_rules:
+  do_not_expand_scope: true
+  forbidden_features:
+    - clubs
+    - club_battles
+    - challenges
+    - seasons
+    - rewards
+    - complex_ranking
+    - multi_factor_evaluation
+    - comments
+    - paid_accounts
+    - topic_ui_system
+  mandatory_principles:
+    - prefer_smallest_working_solution
+    - protect_admin_actions_server_side
+    - keep_domain_rules_out_of_ui_only
+    - verify_after_each_task
+    - preserve_clean_module_boundaries
+
+frozen_decisions:
+  scenario_creation: admin_only
+  admin_role_storage: profiles.is_admin
+  evaluation: like_unlike_only
+  unlike_meaning: like_withdrawal
+  self_like_allowed: false
+  submission_per_user_per_scenario: 1
+  submission_editing_in_mvp: false
+  category_system_in_mvp: false
+  monetization_in_mvp: none
+
+milestones:
+  - id: M1
+    name: repo_bootstrap_and_auth
+    goal: Hozd létre a futtatható alap projektet auth és profile bootstrap alappal.
+    tasks:
+      - id: M1-T1
+        name: Bootstrap repo and app shell
+        deliverables:
+          - flutter workspace or monorepo shell
+          - android runnable app shell
+          - environment configuration baseline
+        verify:
+          - app boots successfully
+          - project structure matches MVP intent
+      - id: M1-T2
+        name: Implement auth flow
+        deliverables:
+          - sign up
+          - sign in
+          - sign out
+          - profile bootstrap on first auth
+        verify:
+          - user can register
+          - user can login
+          - profile row exists after first auth
+      - id: M1-T3
+        name: Implement admin-aware profile access
+        deliverables:
+          - profile fetch
+          - is_admin handling
+          - route or action guarding baseline
+        verify:
+          - non-admin cannot access admin actions
+          - admin flag is read correctly
+
+  - id: M2
+    name: scenario_read_flow
+    goal: A user képes legyen szituációkat listázni és részleteiben megnyitni.
+    tasks:
+      - id: M2-T1
+        name: Implement scenario schema and read queries
+        deliverables:
+          - scenarios table or equivalent
+          - public read policy for allowed scenarios
+          - list and detail queries
+        verify:
+          - seeded scenarios appear in list
+          - detail page renders selected scenario
+      - id: M2-T2
+        name: Build scenario list and detail screens
+        deliverables:
+          - scenario list UI
+          - scenario detail UI
+          - basic loading and empty states
+        verify:
+          - user can open scenario detail from list
+          - basic error state is handled
+
+  - id: M3
+    name: submission_flow
+    goal: A user képes legyen reakciót beküldeni és reakciókat olvasni.
+    tasks:
+      - id: M3-T1
+        name: Implement submission schema and rules
+        deliverables:
+          - submissions table or equivalent
+          - uniqueness rule for user+scenario
+          - create and read policies
+        verify:
+          - one user cannot create second submission for same scenario
+          - submissions can be read in allowed context
+      - id: M3-T2
+        name: Build submission create and read UI
+        deliverables:
+          - submission composer
+          - submission list
+          - submitted-state handling
+        verify:
+          - user can submit once
+          - submitted reaction appears in list
+          - editing is not available
+
+  - id: M4
+    name: evaluation_flow
+    goal: Like/unlike működjön a dokumentált szabályok szerint.
+    tasks:
+      - id: M4-T1
+        name: Implement likes schema and policies
+        deliverables:
+          - likes table or equivalent
+          - unique user+submission like rule
+          - self-like protection
+        verify:
+          - user can like another submission
+          - user cannot like own submission
+          - duplicate like cannot be created
+      - id: M4-T2
+        name: Build like/unlike UI and counters
+        deliverables:
+          - like button
+          - unlike behavior
+          - displayed like counts
+        verify:
+          - like count changes correctly
+          - unlike removes prior like
+
+  - id: M5
+    name: admin_scenario_create_flow
+    goal: Admin képes legyen új szituációt létrehozni.
+    tasks:
+      - id: M5-T1
+        name: Create admin-only scenario creation path
+        deliverables:
+          - admin form
+          - admin-only action protection
+          - create mutation
+        verify:
+          - admin can create scenario
+          - non-admin cannot create scenario
+      - id: M5-T2
+        name: Ensure new scenario appears in user flow
+        deliverables:
+          - list refresh or query update
+        verify:
+          - newly created scenario appears in list and detail
+
+  - id: M6
+    name: moderation_minimum
+    goal: MVP minimum moderation flow működjön.
+    tasks:
+      - id: M6-T1
+        name: Implement reaction report flow
+        deliverables:
+          - reports schema
+          - report action from UI
+          - admin visibility of report data
+        verify:
+          - user can report a reaction
+          - report persists correctly
+      - id: M6-T2
+        name: Implement admin hide/delete controls
+        deliverables:
+          - hide/delete reaction action
+          - hide/delete scenario action
+          - user restriction baseline
+        verify:
+          - admin can hide reaction
+          - hidden reaction no longer appears normally
+          - admin can hide scenario
+
+  - id: M7
+    name: seed_stabilize_accept
+    goal: Seed, runbook, acceptance and stabilization.
+    tasks:
+      - id: M7-T1
+        name: Create dev seed path
+        deliverables:
+          - seed admin user strategy
+          - seed scenario
+          - optional seed submissions
+        verify:
+          - local env can be initialized for demo/testing
+      - id: M7-T2
+        name: Final acceptance pass
+        deliverables:
+          - DoD checklist result
+          - bug fixes from critical flow testing
+          - short implementation report
+        verify:
+          - all definition_of_done items checked
+
+artifacts_required:
+  - migration_files
+  - rls_policy_files
+  - seed_files
+  - env_example
+  - local_run_instructions
+  - acceptance_report
+
+verification_protocol:
+  after_each_task:
+    - inspect_changed_files
+    - run_relevant_checks
+    - compare_behavior_to_frozen_decisions
+    - log_evidence
+
+final_success_criteria:
+  - auth_and_profile_work
+  - scenario_list_and_detail_work
+  - submission_create_and_read_work
+  - like_unlike_work
+  - admin_scenario_creation_works
+  - moderation_minimum_works
+  - android_app_runs
+  - local_seeded_demo_possible
