@@ -10,9 +10,6 @@ Future<void> main() async {
   await Supabase.initialize(
     url: Env.supabaseUrl,
     anonKey: Env.supabaseAnonKey,
-    authOptions: FlutterAuthClientOptions(
-      localStorage: const EmptyLocalStorage(),
-    ),
   );
   
   runApp(
