@@ -1,8 +1,15 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:rhetorium/main.dart' as app;
+
+String _generateTestPassword() {
+  final random = Random.secure();
+  const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  return List.generate(16, (_) => chars[random.nextInt(chars.length)]).join();
+}
 
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
@@ -11,7 +18,7 @@ void main() {
     testWidgets('Register new account', (WidgetTester tester) async {
       final timestamp = DateTime.now().millisecondsSinceEpoch;
       final testEmail = 'test_$timestamp@test.com';
-      final testPassword = 'TestPass${timestamp.toString().substring(5)}!';
+      final testPassword = _generateTestPassword();
       const testDisplayName = 'Teszt User';
 
       app.main();
