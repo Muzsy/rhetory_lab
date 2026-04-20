@@ -33,6 +33,7 @@ Futasd le a sémákat a Supabase SQL Editor-ban vagy CLI-vel:
 **Fájlok:**
 - `rhetorium/supabase/migrations/001_initial_schema.sql` - Alap séma
 - `rhetorium/supabase/migrations/002_t1_auth_rls_fix.sql` - Auth és RLS javítások
+- `rhetorium/supabase/migrations/003_t1_1_trigger_fix.sql` - Trigger fix
 
 ### 2. Seed Data (Opcionális)
 Futtasd a seed adatokat demo tartalomhoz:
@@ -47,9 +48,20 @@ Az admin user manuálisan jön létre:
 
 ---
 
+## Környezeti Változók Mechanizmusa
+
+Az alkalmazás `String.fromEnvironment` alapú env kezelést használ.
+A változókat a `--dart-define-from-file=.env.local` kapcsolóval kell átadni.
+
+### Fontos
+- Ha a változók nincsenek beállítva, az alkalmazás hibát dob indításkor.
+- A `.env.local` fájl **NEM** kerül a verziókezelésbe (.gitignore-ban van).
+
+---
+
 ## Alkalmazás Futtatása
 
-### Android Eszközön (Javasolt)
+### Android Eszközön (Debug)
 
 ```bash
 cd rhetorium
@@ -58,7 +70,7 @@ cd rhetorium
 flutter run --dart-define-from-file=../.env.local
 ```
 
-### Android Emulátoron
+### Android Emulátoron (Debug)
 
 ```bash
 cd rhetorium
@@ -74,10 +86,19 @@ flutter run --dart-define-from-file=../.env.local -d chrome
 
 ### Release Build (Android)
 
+Release buildhez a változókat explicit módon kell átadni:
+
 ```bash
 cd rhetorium
-flutter build apk --release
+
+# Olvasd be a .env.local tartalmát és add át a build-nek
+source ../.env.local
+flutter build apk --release \
+  --dart-define=SUPABASE_URL="$SUPABASE_URL" \
+  --dart-define=SUPABASE_ANON_KEY="$SUPABASE_ANON_KEY"
 ```
+
+**Alternatíva:** Használj scriptet vagy Makefile-t a buildhez.
 
 ---
 
@@ -87,7 +108,7 @@ flutter build apk --release
 rhetorium/
 ├── lib/
 │   ├── main.dart                    # App bootstrap
-│   ├── env.dart                     # Environment config (--dart-define-from-file)
+│   ├── env.dart                     # Environment config (--dart-define)
 │   ├── app/
 │   │   ├── app.dart                 # MaterialApp
 │   │   └── router/
@@ -105,7 +126,8 @@ rhetorium/
 ├── supabase/
 │   ├── migrations/
 │   │   ├── 001_initial_schema.sql
-│   │   └── 002_t1_auth_rls_fix.sql
+│   │   ├── 002_t1_auth_rls_fix.sql
+│   │   └── 003_t1_1_trigger_fix.sql
 │   └── seed/
 │       └── 001_seed_data.sql
 └── integration_test/
@@ -114,8 +136,19 @@ rhetorium/
 
 ---
 
-## Fontos: Környezeti Változók
+## Hibaelhárítás
 
-Az alkalmazás **kötelezően** megköveteli a `.env.local` fájlt. Ha a változók nincsenek beállítva, az alkalmazás hibát dob indításkor.
+### "SUPABASE_URL is not set" hiba
+- Ellenőrizd, hogy a `.env.local` fájl létezik és tartalmazza a szükséges változókat
+- Ellenőrizd, hogy a `--dart-define-from-file` kapcsoló helyesen mutat a fájlra
 
-A `.env.local` fájl **NEM** kerül a verziókezelésbe (.gitignore-ban van).
+### Release build nem működik
+- A release buildhez explicit `--dart-define` kapcsolókat kell használni
+- A `--dart-define-from-file` debug módban működik, release buildnél nem
+
+---
+
+## További Információk
+
+- Az env változók validálása az `Env.validate()` függvényben történik (lib/env.dart)
+- Ha nincs .env.local, egyértelmű hibaüzenet jelenik meg
