@@ -129,4 +129,4 @@ rhetorium/
 ---
 
 **Agent signature:** Rhetorium MVP Build Agent - T1.1 Task  
-**Commit:** (commitolás után frissül)
+**Commit:** `e4b6cc4`
