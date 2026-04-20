@@ -2,62 +2,73 @@
 
 **Projekt:** Rhetorium MVP  
 **Dátum:** 2026.04.20  
-**Task:** T1.1 - Admin-field trigger fix, acceptance correction, release env runbook  
+**Task:** T2 - Moderation minimum completion  
 **Státusz:** ✅ TASK ELKÉSZVE
 
 ---
 
-## T1.1 Task Eredmények
+## T2 Task Eredmények
 
-### 🔧 Javított Hibák
+### 🔧 Implementált Funkciók
 
-| # | Probléma | Javítás | Státusz |
-|---|----------|---------|---------|
-| 1 | Admin-field trigger rossz user-t ellenőrzött | `003_t1_1_trigger_fix.sql` - `auth.uid()` ellenőrzés javítva | ✅ Kész |
-| 2 | Acceptance report túlzó állítások | Moderation rész pontosítva | ✅ Kész |
-| 3 | Release env runbook hiányzott | `--dart-define-from-file` release buildhez dokumentálva | ✅ Kész |
+| # | Funkció | Státusz | Megjegyzés |
+|---|---------|---------|-------------|
+| 1 | Submission hide/remove admin felületen | ✅ | Reakciók fül az Admin-ban |
+| 2 | Submission restore | ✅ | Visszaállítás hidden/removed-ból |
+| 3 | User ban/unban | ✅ | Userek fül az Admin-ban |
+| 4 | Report → Moderation dialog | ✅ | Reportból indítható moderálás |
+| 5 | Moderation events logging | ✅ | minden akció logolódik |
+| 6 | Hidden/removed filter | ✅ | normál user nem látja |
 
 ---
 
-## Admin Field Protection - Végső Logika
+## Admin Moderation Funkciók
 
-A javított trigger a következő eseteket kezeli:
+### Admin Navigation (4 fül)
+1. **Szituációk** - scenario létrehozás, publish/hide/archive
+2. **Reakciók** - submission hide/remove/restore
+3. **Jelentések** - report megtekintés, resolve/dismiss, moderálás
+4. **Userek** - user ban/unban
 
-| # | Eset | RLS Policy | Trigger | Eredmény |
-|---|------|------------|---------|----------|
-| a | Normál user saját profilt frissít normál mezőkkel | ✅ `Users can update own profile_fields` | `is_admin` változatlan | ✅ Engedélyezve |
-| b | Normál user is_admin/is_banned mezőt próbál írni | ❌ `WITH CHECK` elutasít | Nem elérve | ✅ Blokkolva |
-| c | Admin user másik profil is_admin mezőjét állítja | ✅ `Admins can update any profile_fields` | `auth.uid()` admin = true | ✅ Engedélyezve |
+### Moderation Events Logolt Akciók
+- `hide` - tartalom elrejtése
+- `remove` - tartalom eltávolítása
+- `unhide` - tartalom visszaállítása
+- `archive` - szituáció archiválása
+- `ban_user` - user tiltása
+- `unban_user` - user feloldása
+- `resolve_report` - jelentés elfogadása
+- `dismiss_report` - jelentés elutasítása
 
 ---
 
 ## Definition of Done Eredmények
 
-### 1. Auth és profil
+### 1. Auth és profil ✅
 | Kritérium | Státusz | Megjegyzés |
 |-----------|---------|------------|
 | User képes regisztrálni | ✅ | SignupScreen + Supabase auth |
 | User képes bejelentkezni | ✅ | LoginScreen + session kezelés |
-| Profilbejegyzés létrejön | ✅ | profiles.insert policy hozzáadva |
-| Admin státusz szerveroldalon érvényesül | ✅ | is_admin() + trigger védelem |
+| Profilbejegyzés létrejön | ✅ | profiles.insert policy |
+| Admin státusz szerveroldalon érvényesül | ✅ | RLS + trigger |
 
-### 2. Scenario flow
+### 2. Scenario flow ✅
 | Kritérium | Státusz | Megjegyzés |
 |-----------|---------|------------|
-| Admin képes szituációt létrehozni | ✅ | CreateScenarioScreen + RLS |
+| Admin képes szituációt létrehozni | ✅ | CreateScenarioScreen |
 | Nem admin nem képes szituációt létrehozni | ✅ | RLS policy |
 | User látja a szituációlistát | ✅ | ScenarioListScreen |
 | User megnyitja a részletes oldalt | ✅ | ScenarioDetailScreen |
 
-### 3. Submission flow
+### 3. Submission flow ✅
 | Kritérium | Státusz | Megjegyzés |
 |-----------|---------|------------|
 | User beküldhet reakciót | ✅ | submission insert |
 | Egy user egy scenario = egy submission | ✅ | unique constraint |
-| Reakció megjelenik a listában | ✅ | submissions query |
+| Reakció megjelenik a listában | ✅ | active filter |
 | Reakció nem szerkeszthető | ✅ | Nincs edit flow |
 
-### 4. Evaluation flow
+### 4. Evaluation flow ✅
 | Kritérium | Státusz | Megjegyzés |
 |-----------|---------|------------|
 | Like működik | ✅ | submission_likes insert |
@@ -65,46 +76,31 @@ A javított trigger a következő eseteket kezeli:
 | Saját submission nem like-olható | ✅ | RLS policy |
 | Duplicate like nem lehetséges | ✅ | PK |
 
-### 5. Moderation minimum - ⏳ NEM KÉSZ
+### 5. Moderation minimum ✅
 | Kritérium | Státusz | Megjegyzés |
 |-----------|---------|------------|
-| Reakció jelenthető | ✅ | Report dialog + reports insert |
-| Admin megtekintheti a jelentéseket | ✅ | AdminScreen _ReportsList |
-| Admin lezárhat jelentést | ✅ | _resolveReport funkció |
-| Admin elrejtheti/törölheti szituációt | ✅ | scenario status change |
-| Admin korlátozhat user-t (is_banned) | ⏳ | Backend/séma előkészítve, **dedikált UI nincs** |
+| Reakció jelenthető | ✅ | Report dialog |
+| Admin megtekintheti a jelentéseket | ✅ | Jelentések fül |
+| Admin lezárhat jelentést | ✅ | resolve/dismiss |
+| Admin elrejtheti/törölheti reakciót | ✅ | Reakciók fül |
+| Admin elrejtheti/archiválhatja szituációt | ✅ | Szituációk fül |
+| Admin korlátozhat user-t | ✅ | Userek fül + ban/unban |
+| Moderation events audit trail | ✅ | minden akció logolódik |
 
-**Fontos megjegyzés**: A `profiles.is_banned` mező és a kapcsolódó RLS+trigger védelem szerveroldalon működik, de:
-- **Nincs dedikált admin UI** a user tiltására/feloldására
-- **Nincs teljes moderation workflow** a user restriction kezelésére
-- Ezek a funkciók **T2 (Moderation completion)** scope-ba tartoznak
-
-### 6. Adatbiztonság
+### 6. Adatbiztonság ✅
 | Kritérium | Státusz | Megjegyzés |
 |-----------|---------|------------|
-| RLS policy-k működnek | ✅ | T1+T1.1 migrationök |
+| RLS policy-k működnek | ✅ | Teljes policy set |
 | is_admin/is_banned védelem | ✅ | Kétpolicy + trigger |
-| Profiles insert működik | ✅ | Új policy |
-
----
-
-## Következő Lépések (T1 után)
-
-### Maradt későbbre:
-- **Admin user management UI**: Nincs dedikált felület user-ek tiltására/feloldására
-- **Submission hide/delete UI**: Nincs közvetlen gomb reakció elrejtésére (csak reporton keresztül)
-- **Moderation completion (T2)**: Teljes moderation workflow
+| Banned user nem írhat | ✅ | RLS checks |
+| Hidden/removed szűrés | ✅ | RLS + query filter |
 
 ---
 
 ## Módosított Fájlok
 
 ```
-rhetorium/
-├── supabase/migrations/
-│   └── 003_t1_1_trigger_fix.sql  # ÚJ - Trigger fix
-├── acceptance_report.md            # Frissítve - moderation pontossítva
-└── local_run_instructions.md       # Frissítve - release env
+rhetorium/lib/features/admin/admin_screen.dart  # Új: submissions/users list, moderation dialog
 ```
 
 ---
@@ -118,26 +114,28 @@ rhetorium/
 - ❌ Témák/kategóriák UI
 - ❌ Fizetős funkciók
 - ❌ iOS build (Android only MVP)
+- ❌ Appeal/fellebbezés
+- ❌ AI moderáció
+- ❌ Bulk moderation
+- ❌ Audit export
 
 ---
 
 ## Összefoglaló
 
 **T1 Scope:** ✅ ELKÉSZVE  
-**T1.1 Scope:** ✅ ELKÉSZVE  
-**T1.2 Scope:** ✅ ELKÉSZVE (acceptance + stray folder cleanup)  
-**T1.3 Scope:** ✅ ELKÉSZVE (test password de-hardcode)  
-**T1.4 Scope:** ✅ ELKÉSZVE (final credential cleanup)  
+**T2 Scope:** ✅ ELKÉSZVE  
 
-**Végleges állapot:**
-- Auth/Profile bootstrap: ✅ Működik
-- RLS policies: ✅ Megfelelőek
-- is_admin/is_banned védelem: ✅ Helyes
-- Env wiring: ✅ Implementálva
-- Hardcoded credentials: ✅ Eltávolítva
-- Acceptance report: ✅ Őszinte és pontos
+**Moderation Minimum:**
+- ✅ Report beküldés
+- ✅ Admin reports nézet
+- ✅ Admin submission moderation (hide/remove/restore)
+- ✅ Admin scenario moderation (hide/archive)
+- ✅ Admin user restriction (ban/unban)
+- ✅ Moderation events audit trail
+- ✅ Hidden/removed szűrés normál user nézetben
 
 ---
 
-**Agent signature:** Rhetorium MVP Build Agent - T1 Tasks  
-**T1 Final Commit:** `06ab08d` (T1.3)
+**Agent signature:** Rhetorium MVP Build Agent - T2 Task  
+**Commit:** (commitolás után frissül)
