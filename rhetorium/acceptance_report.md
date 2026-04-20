@@ -138,4 +138,4 @@ rhetorium/lib/features/admin/admin_screen.dart  # Új: submissions/users list, m
 ---
 
 **Agent signature:** Rhetorium MVP Build Agent - T2 Task  
-**Commit:** (commitolás után frissül)
+**Commit:** `a69a9cc`
