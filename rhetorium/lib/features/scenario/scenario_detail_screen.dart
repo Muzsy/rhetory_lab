@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../shared/core/supabase_client.dart';
 
 final scenarioDetailProvider = FutureProvider.family((ref, String scenarioId) async {
@@ -16,18 +18,19 @@ final scenarioSubmissionsProvider = FutureProvider.family((ref, String scenarioI
   
   final submissions = await supabase
       .from('submissions')
-      .select('*, profiles(display_name)')
+      .select('*, profiles!author_id(display_name)')
       .eq('scenario_id', scenarioId)
       .eq('status', 'active')
       .order('created_at', ascending: true);
 
   final submissionsWithLikes = await Future.wait(
     (submissions as List).map((submission) async {
-      final likes = await supabase
+      final response = await supabase
           .from('submission_likes')
-          .select('*')
+          .select()
           .eq('submission_id', submission['id'])
-          .count();
+          .count(CountOption.exact);
+      final likes = response.count;
       
       final myLike = userId != null
           ? await supabase
@@ -138,7 +141,7 @@ class _ScenarioDetailScreenState extends ConsumerState<ScenarioDetailScreen> {
         title: const Text('Szituáció'),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.of(context).pop(),
+          onPressed: () => context.go('/home'),
         ),
       ),
       body: scenarioAsync.when(
