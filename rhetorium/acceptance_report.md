@@ -65,16 +65,19 @@ A javított trigger a következő eseteket kezeli:
 | Saját submission nem like-olható | ✅ | RLS policy |
 | Duplicate like nem lehetséges | ✅ | PK |
 
-### 5. Moderation minimum - ⏳ RÉSZLEGESEN KÉSZ
+### 5. Moderation minimum - ⏳ NEM KÉSZ
 | Kritérium | Státusz | Megjegyzés |
 |-----------|---------|------------|
 | Reakció jelenthető | ✅ | Report dialog + reports insert |
 | Admin megtekintheti a jelentéseket | ✅ | AdminScreen _ReportsList |
 | Admin lezárhat jelentést | ✅ | _resolveReport funkció |
 | Admin elrejtheti/törölheti szituációt | ✅ | scenario status change |
-| Admin korlátozhat user-t (is_banned) | ✅ | RLS + trigger védelem, de **nincs dedikált UI** |
+| Admin korlátozhat user-t (is_banned) | ⏳ | Backend/séma előkészítve, **dedikált UI nincs** |
 
-**Megjegyzés**: A `profiles.is_banned` mező szerveroldalon védve van (RLS + trigger), de admin UI a felhasználó tiltására/megszüntetésére **MVP-ben még nincs implementálva**.
+**Fontos megjegyzés**: A `profiles.is_banned` mező és a kapcsolódó RLS+trigger védelem szerveroldalon működik, de:
+- **Nincs dedikált admin UI** a user tiltására/feloldására
+- **Nincs teljes moderation workflow** a user restriction kezelésére
+- Ezek a funkciók **T2 (Moderation completion)** scope-ba tartoznak
 
 ### 6. Adatbiztonság
 | Kritérium | Státusz | Megjegyzés |
