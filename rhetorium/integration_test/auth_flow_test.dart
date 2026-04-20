@@ -11,7 +11,7 @@ void main() {
     testWidgets('Register new account', (WidgetTester tester) async {
       final timestamp = DateTime.now().millisecondsSinceEpoch;
       final testEmail = 'test_$timestamp@test.com';
-      const testPassword = 'TestPassword123!';
+      final testPassword = 'TestPass${timestamp.toString().substring(5)}!';
       const testDisplayName = 'Teszt User';
 
       app.main();
