@@ -416,7 +416,10 @@ class _ReportsList extends ConsumerWidget {
             TextButton(
               onPressed: () {
                 Navigator.pop(context);
-                _moderateSubmission(context, ref, report['target_id'], 'hide');
+                _moderateSubmission(
+                  context, ref, report['target_id'], 'hide',
+                  resolveReportId: report['id'],
+                );
               },
               child: const Text('Elrejtés'),
             ),
@@ -424,7 +427,10 @@ class _ReportsList extends ConsumerWidget {
             TextButton(
               onPressed: () {
                 Navigator.pop(context);
-                _moderateSubmission(context, ref, report['target_id'], 'remove');
+                _moderateSubmission(
+                  context, ref, report['target_id'], 'remove',
+                  resolveReportId: report['id'],
+                );
               },
               child: const Text('Törlés'),
             ),
@@ -437,8 +443,9 @@ class _ReportsList extends ConsumerWidget {
     BuildContext context,
     WidgetRef ref,
     String submissionId,
-    String action,
-  ) async {
+    String action, {
+    String? resolveReportId,
+  }) async {
     try {
       final newStatus = action == 'hide' ? 'hidden' : 'removed';
       await supabase.from('submissions').update({
@@ -450,6 +457,21 @@ class _ReportsList extends ConsumerWidget {
         targetId: submissionId,
         actionType: action == 'hide' ? 'hide' : 'remove',
       );
+
+      if (resolveReportId != null) {
+        await supabase.from('reports').update({
+          'status': 'resolved',
+          'handled_by': supabase.auth.currentUser!.id,
+          'handled_at': DateTime.now().toIso8601String(),
+        }).eq('id', resolveReportId);
+        await _logModerationEvent(
+          targetType: 'report',
+          targetId: resolveReportId,
+          actionType: 'resolve_report',
+        );
+        ref.invalidate(openReportsProvider);
+      }
+
       ref.invalidate(adminSubmissionsProvider);
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

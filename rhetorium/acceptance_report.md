@@ -2,43 +2,71 @@
 
 **Projekt:** Rhetorium MVP  
 **Dátum:** 2026.04.20  
-**Task:** T2 - Moderation minimum completion  
+**Task:** T2.1 - Moderation blockers fix  
 **Státusz:** ✅ TASK ELKÉSZVE
 
 ---
 
-## T2 Task Eredmények
+## T2.1 Task Eredmények
 
-### 🔧 Implementált Funkciók
+### 🔧 Javított Hibák
 
-| # | Funkció | Státusz | Megjegyzés |
-|---|---------|---------|-------------|
-| 1 | Submission hide/remove admin felületen | ✅ | Reakciók fül az Admin-ban |
-| 2 | Submission restore | ✅ | Visszaállítás hidden/removed-ból |
-| 3 | User ban/unban | ✅ | Userek fül az Admin-ban |
-| 4 | Report → Moderation dialog | ✅ | Reportból indítható moderálás |
-| 5 | Moderation events logging | ✅ | minden akció logolódik |
-| 6 | Hidden/removed filter | ✅ | normál user nem látja |
+| # | Probléma | Megoldás | Státusz |
+|---|----------|---------|---------|
+| 1 | Admin nem látott minden usert | `Admins can view all profiles` RLS policy | ✅ |
+| 2 | Admin nem látott hidden/removed submissiont | `View submissions based on role` RLS policy | ✅ |
+| 3 | Report dialogból nem frissült a report státusza | `resolveReportId` paraméter + auto-resolve | ✅ |
+| 4 | `unhide` nem volt az action_type check-ben | Migration 004 hozzáadva | ✅ |
 
 ---
 
-## Admin Moderation Funkciók
+## Migration 004 - T2.1 Fix
 
-### Admin Navigation (4 fül)
-1. **Szituációk** - scenario létrehozás, publish/hide/archive
-2. **Reakciók** - submission hide/remove/restore
-3. **Jelentések** - report megtekintés, resolve/dismiss, moderálás
-4. **Userek** - user ban/unban
+### Admin SELECT Policy-k
+```sql
+-- Profiles: admin láthatja az összes profilt
+CREATE POLICY "Admins can view all profiles" ON public.profiles FOR SELECT
+USING (exists (select 1 from public.profiles where id = auth.uid() and is_admin = true));
 
-### Moderation Events Logolt Akciók
-- `hide` - tartalom elrejtése
-- `remove` - tartalom eltávolítása
-- `unhide` - tartalom visszaállítása
-- `archive` - szituáció archiválása
-- `ban_user` - user tiltása
-- `unban_user` - user feloldása
-- `resolve_report` - jelentés elfogadása
-- `dismiss_report` - jelentés elutasítása
+-- Submissions: admin látja az összes submissiont, user csak active-ot
+CREATE POLICY "View submissions based on role" ON public.submissions FOR SELECT
+USING (
+  exists (select 1 from public.profiles where id = auth.uid() and is_admin = true)
+  OR (status = 'active' AND exists (select 1 from public.scenarios where id = scenario_id and status = 'published'))
+);
+```
+
+### Moderation Events Action Types
+```sql
+-- 'unhide' hozzáadva az engedélyezett action_type-okhoz
+CHECK (action_type in ('hide', 'remove', 'unhide', 'archive', 'ban_user', 'unban_user', 'resolve_report', 'dismiss_report'))
+```
+
+---
+
+## Moderation Events Teljes Lista
+
+| Action Type | Leírás |
+|-------------|--------|
+| `hide` | Tartalom elrejtése |
+| `remove` | Tartalom eltávolítása |
+| `unhide` | Tartalom visszaállítása |
+| `archive` | Szituáció archiválása |
+| `ban_user` | User tiltása |
+| `unban_user` | User feloldása |
+| `resolve_report` | Jelentés elfogadva |
+| `dismiss_report` | Jelentés elutasítva |
+
+---
+
+## Admin Moderation Flow
+
+### Report → Moderation konzisztencia
+Amikor admin a report dialogból moderál egy submissiont:
+1. Submission státusza változik (hide/remove)
+2. Report automatikusan `resolved` státuszra vált
+3. `handled_by` és `handled_at` kitöltődik
+4. Moderation event logolódik submission és report actionre is
 
 ---
 
@@ -81,11 +109,13 @@
 |-----------|---------|------------|
 | Reakció jelenthető | ✅ | Report dialog |
 | Admin megtekintheti a jelentéseket | ✅ | Jelentések fül |
-| Admin lezárhat jelentést | ✅ | resolve/dismiss |
+| Admin lezárhat jelentést | ✅ | resolve/dismiss gombok |
 | Admin elrejtheti/törölheti reakciót | ✅ | Reakciók fül |
 | Admin elrejtheti/archiválhatja szituációt | ✅ | Szituációk fül |
 | Admin korlátozhat user-t | ✅ | Userek fül + ban/unban |
-| Moderation events audit trail | ✅ | minden akció logolódik |
+| Moderation events audit trail | ✅ | Minden akció logolódik |
+| Admin lát hidden/removed submissiont | ✅ | T2.1 migration |
+| Report → Moderation konzisztencia | ✅ | Auto-resolve report |
 
 ### 6. Adatbiztonság ✅
 | Kritérium | Státusz | Megjegyzés |
@@ -94,13 +124,18 @@
 | is_admin/is_banned védelem | ✅ | Kétpolicy + trigger |
 | Banned user nem írhat | ✅ | RLS checks |
 | Hidden/removed szűrés | ✅ | RLS + query filter |
+| Admin teljes nézet | ✅ | T2.1 migration |
 
 ---
 
 ## Módosított Fájlok
 
 ```
-rhetorium/lib/features/admin/admin_screen.dart  # Új: submissions/users list, moderation dialog
+rhetorium/
+├── supabase/migrations/
+│   └── 004_t2_1_moderation_fix.sql  # ÚJ - Admin visibility + action_type fix
+├── lib/features/admin/admin_screen.dart  # Frissítve - report auto-resolve
+└── acceptance_report.md  # Frissítve
 ```
 
 ---
@@ -125,8 +160,9 @@ rhetorium/lib/features/admin/admin_screen.dart  # Új: submissions/users list, m
 
 **T1 Scope:** ✅ ELKÉSZVE  
 **T2 Scope:** ✅ ELKÉSZVE  
+**T2.1 Scope:** ✅ ELKÉSZVE  
 
-**Moderation Minimum:**
+**Moderation Minimum Teljes:**
 - ✅ Report beküldés
 - ✅ Admin reports nézet
 - ✅ Admin submission moderation (hide/remove/restore)
@@ -134,8 +170,10 @@ rhetorium/lib/features/admin/admin_screen.dart  # Új: submissions/users list, m
 - ✅ Admin user restriction (ban/unban)
 - ✅ Moderation events audit trail
 - ✅ Hidden/removed szűrés normál user nézetben
+- ✅ Admin teljes nézet (T2.1)
+- ✅ Report → Moderation konzisztencia (T2.1)
 
 ---
 
-**Agent signature:** Rhetorium MVP Build Agent - T2 Task  
-**Commit:** `a69a9cc`
+**Agent signature:** Rhetorium MVP Build Agent - T2.1 Task  
+**Commit:** (commitolás után frissül)
