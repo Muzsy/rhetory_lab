@@ -13,49 +13,68 @@
 
 | # | Probléma | Megoldás | Státusz |
 |---|----------|---------|---------|
-| 1 | Admin nem látott minden usert | `Admins can view all profiles` RLS policy | ✅ |
-| 2 | Admin nem látott hidden/removed submissiont | `View submissions based on role` RLS policy | ✅ |
-| 3 | Report dialogból nem frissült a report státusza | `resolveReportId` paraméter + auto-resolve | ✅ |
-| 4 | `unhide` nem volt az action_type check-ben | Migration 004 hozzáadva | ✅ |
+| 1 | Admin nem látott minden usert | `is_admin()` security definer RLS policy (migration 005) | ✅ |
+| 2 | Admin nem látott hidden/removed submissiont | `is_admin()` security definer RLS policy (migration 005) | ✅ |
+| 3 | RLS önhivatkozó query probléma | Migration 005 - is_admin() funkció használata | ✅ |
+| 4 | Report dialogból nem frissült a report státusza | `resolveReportId` paraméter + auto-resolve | ✅ |
+| 5 | `unhide` action_type konzisztencia | Migration 004 - CHECK constraint bővítés | ✅ |
 
 ---
 
-## Migration 004 - T2.1 Fix
+## Migration Összefoglaló
 
-### Admin SELECT Policy-k
+### Migration 004 - T2.1 Initial Fix
 ```sql
--- Profiles: admin láthatja az összes profilt
+-- Admin SELECT Policy-k
 CREATE POLICY "Admins can view all profiles" ON public.profiles FOR SELECT
 USING (exists (select 1 from public.profiles where id = auth.uid() and is_admin = true));
 
--- Submissions: admin látja az összes submissiont, user csak active-ot
 CREATE POLICY "View submissions based on role" ON public.submissions FOR SELECT
 USING (
   exists (select 1 from public.profiles where id = auth.uid() and is_admin = true)
   OR (status = 'active' AND exists (select 1 from public.scenarios where id = scenario_id and status = 'published'))
 );
+
+-- Moderation Events Action Types - 'unhide' hozzáadva
+CHECK (action_type in ('hide', 'remove', 'unhide', 'archive', 'ban_user', 'unban_user', 'resolve_report', 'dismiss_report'))
 ```
 
-### Moderation Events Action Types
+### Migration 005 - T2.1 RLS Fix (KRITIKUS)
 ```sql
--- 'unhide' hozzáadva az engedélyezett action_type-okhoz
-CHECK (action_type in ('hide', 'remove', 'unhide', 'archive', 'ban_user', 'unban_user', 'resolve_report', 'dismiss_report'))
+-- RLS önhivatkozó query probléma javítása
+-- Security definer is_admin() funkció használata a self-referential query helyett
+
+CREATE POLICY "Admins can view all profiles"
+  ON public.profiles FOR SELECT
+  USING (public.is_admin(auth.uid()));
+
+CREATE POLICY "View submissions based on role"
+  ON public.submissions FOR SELECT
+  USING (
+    public.is_admin(auth.uid())
+    OR (status = 'active' AND exists (select 1 from public.scenarios where id = scenario_id and status = 'published'))
+  );
+
+CREATE POLICY "Admins can update any profile_fields"
+  ON public.profiles FOR UPDATE
+  USING (public.is_admin(auth.uid()))
+  WITH CHECK (public.is_admin(auth.uid()));
 ```
 
 ---
 
 ## Moderation Events Teljes Lista
 
-| Action Type | Leírás |
-|-------------|--------|
-| `hide` | Tartalom elrejtése |
-| `remove` | Tartalom eltávolítása |
-| `unhide` | Tartalom visszaállítása |
-| `archive` | Szituáció archiválása |
-| `ban_user` | User tiltása |
-| `unban_user` | User feloldása |
-| `resolve_report` | Jelentés elfogadva |
-| `dismiss_report` | Jelentés elutasítva |
+| Action Type | Leírás | Használat |
+|-------------|--------|-----------|
+| `hide` | Tartalom elrejtése | Submission, Scenario |
+| `remove` | Tartalom eltávolítása | Submission |
+| `unhide` | Tartalom visszaállítása | Submission, Scenario |
+| `archive` | Szituáció archiválása | Scenario |
+| `ban_user` | User tiltása | Profile |
+| `unban_user` | User feloldása | Profile |
+| `resolve_report` | Jelentés elfogadva | Report |
+| `dismiss_report` | Jelentés elutasítva | Report |
 
 ---
 
@@ -68,6 +87,11 @@ Amikor admin a report dialogból moderál egy submissiont:
 3. `handled_by` és `handled_at` kitöltődik
 4. Moderation event logolódik submission és report actionre is
 
+### Restore Flow
+- Admin a Reakciók fülön látja: active, hidden, removed submissionöket
+- Restore action visszaállítja: status = 'active', hidden_at = null
+- Restore logolódik: action_type = 'unhide'
+
 ---
 
 ## Definition of Done Eredmények
@@ -78,7 +102,7 @@ Amikor admin a report dialogból moderál egy submissiont:
 | User képes regisztrálni | ✅ | SignupScreen + Supabase auth |
 | User képes bejelentkezni | ✅ | LoginScreen + session kezelés |
 | Profilbejegyzés létrejön | ✅ | profiles.insert policy |
-| Admin státusz szerveroldalon érvényesül | ✅ | RLS + trigger |
+| Admin státusz szerveroldalon érvényesül | ✅ | RLS + is_admin() trigger |
 
 ### 2. Scenario flow ✅
 | Kritérium | Státusz | Megjegyzés |
@@ -114,17 +138,18 @@ Amikor admin a report dialogból moderál egy submissiont:
 | Admin elrejtheti/archiválhatja szituációt | ✅ | Szituációk fül |
 | Admin korlátozhat user-t | ✅ | Userek fül + ban/unban |
 | Moderation events audit trail | ✅ | Minden akció logolódik |
-| Admin lát hidden/removed submissiont | ✅ | T2.1 migration |
+| Admin lát hidden/removed submissiont | ✅ | Migration 005 RLS fix |
 | Report → Moderation konzisztencia | ✅ | Auto-resolve report |
+| Restore flow működik admin nézetben | ✅ | is_admin() RLS fix |
 
 ### 6. Adatbiztonság ✅
 | Kritérium | Státusz | Megjegyzés |
 |-----------|---------|------------|
 | RLS policy-k működnek | ✅ | Teljes policy set |
-| is_admin/is_banned védelem | ✅ | Kétpolicy + trigger |
+| is_admin/is_banned védelem | ✅ | is_admin() security definer |
 | Banned user nem írhat | ✅ | RLS checks |
 | Hidden/removed szűrés | ✅ | RLS + query filter |
-| Admin teljes nézet | ✅ | T2.1 migration |
+| Admin teljes nézet | ✅ | Migration 005 is_admin() fix |
 
 ---
 
@@ -133,10 +158,48 @@ Amikor admin a report dialogból moderál egy submissiont:
 ```
 rhetorium/
 ├── supabase/migrations/
-│   └── 004_t2_1_moderation_fix.sql  # ÚJ - Admin visibility + action_type fix
+│   ├── 004_t2_1_moderation_fix.sql  # Admin visibility + action_type fix
+│   └── 005_t2_1_rls_fix.sql        # KRITIKUS: is_admin() RLS javítás
 ├── lib/features/admin/admin_screen.dart  # Frissítve - report auto-resolve
 └── acceptance_report.md  # Frissítve
 ```
+
+---
+
+## Verify Lépések Eredménye
+
+### 1. Admin visibility verify ✅
+- [x] admin látja az összes usert → `public.is_admin(auth.uid())` policy
+- [x] admin látja az összes submissiont → `public.is_admin(auth.uid())` policy
+- [x] admin lát hidden/removed submissiont → is_admin() OR logika
+- [x] RLS oldalon rendezett → migration 005
+
+### 2. Submission restore verify ✅
+- [x] hidden/removed submission visszaállítható adminból
+- [x] restore-hoz szükséges listaelem látható admin nézetben
+- [x] `unhide` action_type engedélyezett
+
+### 3. Report workflow verify ✅
+- [x] report open
+- [x] admin report dialogból moderál
+- [x] submission státusz változik
+- [x] report státusz / handled_by / handled_at konzisztensen frissül
+- [x] Nincs félkész queue-logika
+
+### 4. Moderation event verify ✅
+- [x] hide → logolódik
+- [x] remove → logolódik
+- [x] restore/unhide → logolódik
+- [x] ban_user → logolódik
+- [x] unban_user → logolódik
+- [x] resolve_report → logolódik
+- [x] dismiss_report → logolódik
+- [x] Nincs silent fail
+
+### 5. Scope check ✅
+- [x] NEM T3-as scope
+- [x] Csak T2 lezáró javítás
+- [x] Nem történt kódstruktúra-konszolidáció
 
 ---
 
@@ -166,14 +229,31 @@ rhetorium/
 - ✅ Report beküldés
 - ✅ Admin reports nézet
 - ✅ Admin submission moderation (hide/remove/restore)
-- ✅ Admin scenario moderation (hide/archive)
+- ✅ Admin scenario moderation (hide/archive/unhide)
 - ✅ Admin user restriction (ban/unban)
 - ✅ Moderation events audit trail
 - ✅ Hidden/removed szűrés normál user nézetben
-- ✅ Admin teljes nézet (T2.1)
+- ✅ Admin teljes nézet (T2.1 migration 005)
 - ✅ Report → Moderation konzisztencia (T2.1)
+- ✅ RLS recursion probléma javítva (T2.1 migration 005)
+
+---
+
+## T2 Lezárás Vizsgálat
+
+**T2.1 által javított problémák:**
+1. Admin visibility RLS - is_admin() security definer használata a self-referential query helyett
+2. Submission restore flow - admin láthatja hidden/removed submissionöket
+3. Moderation events action_type konzisztencia - 'unhide' hozzáadva
+4. Report-state consistency - moderation action frissíti a report státuszát
+
+**T2 LEZÁRHATÓ:** ✅ IGEN
+
+---
+
+**Következő logikus task:** T3: Kódstruktúra konszolidáció
 
 ---
 
 **Agent signature:** Rhetorium MVP Build Agent - T2.1 Task  
-**Commit:** (commitolás után frissül)
+**Dátum:** 2026.04.20
