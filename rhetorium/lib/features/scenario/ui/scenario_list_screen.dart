@@ -1,16 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../shared/core/supabase_client.dart';
-
-final scenariosProvider = FutureProvider((ref) async {
-  final response = await supabase
-      .from('scenarios')
-      .select()
-      .eq('status', 'published')
-      .order('created_at', ascending: false);
-  return response;
-});
+import 'package:go_router/go_router.dart';
+import '../providers/scenario_providers.dart';
 
 class ScenarioListScreen extends ConsumerWidget {
   const ScenarioListScreen({super.key});
@@ -25,7 +16,7 @@ class ScenarioListScreen extends ConsumerWidget {
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
-            onPressed: () => ref.refresh(scenariosProvider),
+            onPressed: () => ref.invalidate(scenariosProvider),
           ),
         ],
       ),
@@ -72,7 +63,7 @@ class ScenarioListScreen extends ConsumerWidget {
               Text('Hiba: $error'),
               const SizedBox(height: 16),
               ElevatedButton(
-                onPressed: () => ref.refresh(scenariosProvider),
+                onPressed: () => ref.invalidate(scenariosProvider),
                 child: const Text('Újra'),
               ),
             ],

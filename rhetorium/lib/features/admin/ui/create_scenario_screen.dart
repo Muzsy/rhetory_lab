@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../shared/core/supabase_client.dart';
+import '../../../shared/core/supabase_client.dart';
 
 class CreateScenarioScreen extends ConsumerStatefulWidget {
   const CreateScenarioScreen({super.key});

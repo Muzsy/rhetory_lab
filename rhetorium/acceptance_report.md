@@ -2,20 +2,108 @@
 
 **Projekt:** Rhetorium MVP  
 **Dátum:** 2026.04.21  
-**Task:** T2.3 - Report queue visibility + non-silent moderation logging finalization  
+**Task:** T3 - Kódstruktúra konszolidáció  
 **Státusz:** ✅ TASK ELKÉSZVE
 
 ---
 
-## T2.3 Task Eredmények
+## T3 Task Eredmények
 
-### 🔧 Javított Hibák
+### 🔧 Strukturális Javítások
 
-| # | Probléma | Megoldás | Státusz |
+| # | Terület | Megoldás | Státusz |
 |---|----------|---------|---------|
-| 1 | Report queue nem mutatta a bejelentő nevét | Report UI frissítve (ListTile + Dialog display_name) | ✅ |
-| 2 | Moderation logging silent fail-t okozott | `_logModerationEvent()` elnyelt `try/catch` blokk eltávolítva, logging hiba megszakítja a flow-t | ✅ |
-| 3 | T2 korábbi javítások beépítése | T2.1 módosítások megőrizve | ✅ |
+| 1 | Túlterhelt Router | Screenek kiszervezve feature mappákba, Router csak navigációt kezel | ✅ |
+| 2 | Admin Screen bontás | Szétválasztva tabokra, providerekre és szolgáltatásokra | ✅ |
+| 3 | Feature alapú struktúra | Auth, Scenario, Admin, Profile modulok elkülönítve | ✅ |
+| 4 | Provider & Action tisztítás | Logikai helyre mozgatva (providers/, services/) | ✅ |
+| 5 | Duplikált kód eltávolítása | Felesleges screen implementációk törölve | ✅ |
+
+---
+
+## Új Fájlstruktúra (lib/)
+
+```
+lib/
+├── app/
+│   ├── router/
+│   │   └── app_router.dart      # Csak route definíciók
+│   ├── ui/
+│   │   └── main_shell.dart      # Bottom navigation wrapper
+│   └── app.dart
+├── features/
+│   ├── admin/
+│   │   ├── providers/           # Admin specifikus Riverpod providerek
+│   │   ├── services/            # Moderációs műveletek
+│   │   └── ui/
+│   │       ├── tabs/            # Admin tabok (scenarios, submissions, reports, users)
+│   │       ├── admin_screen.dart
+│   │       └── create_scenario_screen.dart
+│   ├── auth/
+│   │   └── ui/                  # Login és Signup screenek
+│   ├── profile/
+│   │   └── ui/                  # Profil screen
+│   └── scenario/
+│       ├── providers/           # Scenario specifikus providerek
+│       └── ui/                  # List és Detail screenek
+├── shared/
+│   └── core/
+│       └── supabase_client.dart
+├── env.dart
+└── main.dart
+```
+
+---
+
+## Verify Lépések Eredménye (T3)
+
+### 1. Route verify ✅
+- [x] Minden route (/home, /profile, /admin, /login, /signup, /scenario/:id) működik.
+- [x] A navigációs viselkedés változatlan.
+
+### 2. Feature structure verify ✅
+- [x] Auth screenek a features/auth alatt.
+- [x] Scenario screenek a features/scenario alatt.
+- [x] Profile screen a features/profile alatt.
+- [x] Router tiszta, nem tartalmaz screen implementációt.
+
+### 3. Admin refactor verify ✅
+- [x] Scenarios tab működik.
+- [x] Submissions tab működik.
+- [x] Reports tab működik.
+- [x] Users tab működik.
+- [x] Moderációs actionök (hide, remove, restore, ban, resolve) változatlanul működnek.
+
+### 4. Dead code check ✅
+- [x] Régi lib/features/admin/admin_screen.dart törölve.
+- [x] Duplikált lib/features/scenario/scenario_list_screen.dart törölve.
+
+---
+
+## Összefoglaló
+
+**T1 Scope:** ✅ ELKÉSZVE  
+**T2 Scope:** ✅ ELKÉSZVE  
+**T3 Scope:** ✅ ELKÉSZVE
+
+**Kódstruktúra:**
+- ✅ Domain-first moduláris felépítés
+- ✅ Tiszta felelősségi körök
+- ✅ Könnyebb karbantarthatóság
+
+---
+
+## Következő lépések (T4 / Záró Audit)
+1. Egységtesztek és integrációs tesztek frissítése az új struktúrához.
+2. Error handling és loading states finomhangolása.
+3. UI polírozás és konzisztencia check.
+4. Végső MVP build és füstteszt.
+
+---
+
+**Agent signature:** Rhetorium MVP Build Agent - T3 Task  
+**Dátum:** 2026.04.21
+
 
 ---
 
