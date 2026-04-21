@@ -2,8 +2,20 @@
 
 **Projekt:** Rhetorium MVP  
 **Dátum:** 2026.04.21  
-**Task:** T4.2 - Final documentation alignment + honest readiness wording  
-**Státusz:** ✅ TASK ELKÉSZVE (ERŐSEN KONSZOLIDÁLT MVP)
+**Task:** T4.3 - Route guard import fix + final T4 audit closure  
+**Státusz:** ✅ TASK ELKÉSZVE (ZÁRÓ AUDIT LEZÁRVA)
+
+---
+
+## T4.3 Task Eredmények (Záró Fix)
+
+### 🔧 Build-safe Javítások
+
+| # | Terület | Megoldás | Státusz |
+|---|----------|---------|---------|
+| 1 | Route Guard import hiba | `router_notifier.dart` hibás relatív importja javítva (`../../` helyesen) | ✅ |
+| 2 | Compile blocker elhárítva | A router logika most már build-ready | ✅ |
+| 3 | T4 Audit végső lezárás | Minden ismert kritikus hiba elhárítva | ✅ |
 
 ---
 
@@ -94,5 +106,5 @@ Mivel a jelenlegi fejlesztői környezet korlátai miatt teljes körű, automati
 3.  **UX Polish:** További apró kényelmi funkciók (pl. loading indikátorok finomítása).
 
 ---
-**Agent signature:** Rhetorium MVP Build Agent - T4.2 Task  
+**Agent signature:** Rhetorium MVP Build Agent - T4.3 Final Fix  
 **Dátum:** 2026.04.21
