@@ -1,23 +1,21 @@
 # Rhetorium MVP — Acceptance Report
 
 **Projekt:** Rhetorium MVP  
-**Dátum:** 2026.04.20  
-**Task:** T2.1 - Moderation blockers fix  
+**Dátum:** 2026.04.21  
+**Task:** T2.3 - Report queue visibility + non-silent moderation logging finalization  
 **Státusz:** ✅ TASK ELKÉSZVE
 
 ---
 
-## T2.1 Task Eredmények
+## T2.3 Task Eredmények
 
 ### 🔧 Javított Hibák
 
 | # | Probléma | Megoldás | Státusz |
 |---|----------|---------|---------|
-| 1 | Admin nem látott minden usert | `is_admin()` security definer RLS policy (migration 005) | ✅ |
-| 2 | Admin nem látott hidden/removed submissiont | `is_admin()` security definer RLS policy (migration 005) | ✅ |
-| 3 | RLS önhivatkozó query probléma | Migration 005 - is_admin() funkció használata | ✅ |
-| 4 | Report dialogból nem frissült a report státusza | `resolveReportId` paraméter + auto-resolve | ✅ |
-| 5 | `unhide` action_type konzisztencia | Migration 004 - CHECK constraint bővítés | ✅ |
+| 1 | Report queue nem mutatta a bejelentő nevét | Report UI frissítve (ListTile + Dialog display_name) | ✅ |
+| 2 | Moderation logging silent fail-t okozott | `_logModerationEvent()` elnyelt `try/catch` blokk eltávolítva, logging hiba megszakítja a flow-t | ✅ |
+| 3 | T2 korábbi javítások beépítése | T2.1 módosítások megőrizve | ✅ |
 
 ---
 
@@ -86,6 +84,7 @@ Amikor admin a report dialogból moderál egy submissiont:
 2. Report automatikusan `resolved` státuszra vált
 3. `handled_by` és `handled_at` kitöltődik
 4. Moderation event logolódik submission és report actionre is
+5. **(T2.3) A moderációs logging hiba esetén megszakítja a folyamatot. Késznek tekintett akció esetén bizonyítható, hogy a log bejegyzés sikeresen létrejött (nincs silent fail).**
 
 ### Restore Flow
 - Admin a Reakciók fülön látja: active, hidden, removed submissionöket
@@ -137,10 +136,11 @@ Amikor admin a report dialogból moderál egy submissiont:
 | Admin elrejtheti/törölheti reakciót | ✅ | Reakciók fül |
 | Admin elrejtheti/archiválhatja szituációt | ✅ | Szituációk fül |
 | Admin korlátozhat user-t | ✅ | Userek fül + ban/unban |
-| Moderation events audit trail | ✅ | Minden akció logolódik |
+| Moderation events audit trail | ✅ | Minden akció logolódik (Nincs silent fail) |
 | Admin lát hidden/removed submissiont | ✅ | Migration 005 RLS fix |
 | Report → Moderation konzisztencia | ✅ | Auto-resolve report |
 | Restore flow működik admin nézetben | ✅ | is_admin() RLS fix |
+| Admin látja a report queue részleteit | ✅ | Report bejelentő nevének megjelenítése |
 
 ### 6. Adatbiztonság ✅
 | Kritérium | Státusz | Megjegyzés |
@@ -157,10 +157,7 @@ Amikor admin a report dialogból moderál egy submissiont:
 
 ```
 rhetorium/
-├── supabase/migrations/
-│   ├── 004_t2_1_moderation_fix.sql  # Admin visibility + action_type fix
-│   └── 005_t2_1_rls_fix.sql        # KRITIKUS: is_admin() RLS javítás
-├── lib/features/admin/admin_screen.dart  # Frissítve - report auto-resolve
+├── lib/features/admin/admin_screen.dart  # Frissítve - report queue visibility, explicit logging hibakezelés (T2.3)
 └── acceptance_report.md  # Frissítve
 ```
 
@@ -182,19 +179,20 @@ rhetorium/
 ### 3. Report workflow verify ✅
 - [x] report open
 - [x] admin report dialogból moderál
+- [x] admin listában és dialogban látja a reporter display name-t
 - [x] submission státusz változik
 - [x] report státusz / handled_by / handled_at konzisztensen frissül
 - [x] Nincs félkész queue-logika
 
 ### 4. Moderation event verify ✅
-- [x] hide → logolódik
-- [x] remove → logolódik
-- [x] restore/unhide → logolódik
-- [x] ban_user → logolódik
-- [x] unban_user → logolódik
-- [x] resolve_report → logolódik
-- [x] dismiss_report → logolódik
-- [x] Nincs silent fail
+- [x] hide → logolódik (logging hiba kivételt dob, a flow megszakad)
+- [x] remove → logolódik (logging hiba kivételt dob, a flow megszakad)
+- [x] restore/unhide → logolódik (logging hiba kivételt dob, a flow megszakad)
+- [x] ban_user → logolódik (logging hiba kivételt dob, a flow megszakad)
+- [x] unban_user → logolódik (logging hiba kivételt dob, a flow megszakad)
+- [x] resolve_report → logolódik (logging hiba kivételt dob, a flow megszakad)
+- [x] dismiss_report → logolódik (logging hiba kivételt dob, a flow megszakad)
+- [x] Nincs silent fail: A logging hiba az alkalmazásban kifejezett hibát okoz, elkerülve az inkonzisztens sikeres üzenetet.
 
 ### 5. Scope check ✅
 - [x] NEM T3-as scope
@@ -224,14 +222,15 @@ rhetorium/
 **T1 Scope:** ✅ ELKÉSZVE  
 **T2 Scope:** ✅ ELKÉSZVE  
 **T2.1 Scope:** ✅ ELKÉSZVE  
+**T2.3 Scope:** ✅ ELKÉSZVE
 
 **Moderation Minimum Teljes:**
 - ✅ Report beküldés
-- ✅ Admin reports nézet
+- ✅ Admin reports nézet (Bejelentő adatainak megjelenítésével)
 - ✅ Admin submission moderation (hide/remove/restore)
 - ✅ Admin scenario moderation (hide/archive/unhide)
 - ✅ Admin user restriction (ban/unban)
-- ✅ Moderation events audit trail
+- ✅ Moderation events audit trail (Hibadobással, nem elnyelt exception-nel)
 - ✅ Hidden/removed szűrés normál user nézetben
 - ✅ Admin teljes nézet (T2.1 migration 005)
 - ✅ Report → Moderation konzisztencia (T2.1)
@@ -241,11 +240,9 @@ rhetorium/
 
 ## T2 Lezárás Vizsgálat
 
-**T2.1 által javított problémák:**
-1. Admin visibility RLS - is_admin() security definer használata a self-referential query helyett
-2. Submission restore flow - admin láthatja hidden/removed submissionöket
-3. Moderation events action_type konzisztencia - 'unhide' hozzáadva
-4. Report-state consistency - moderation action frissíti a report státuszát
+**T2.3 által javított problémák:**
+1. Report queue visibility - UI-on is megjelenik a report célja, ID-ja, oka és a bejelentő neve.
+2. Moderation logging silent fail - `_logModerationEvent()` felületen megszűnt a `try/catch` elnyelés, a caller kapja meg a hibát és akadályozza meg az "ál-siker" Snackbar-t.
 
 **T2 LEZÁRHATÓ:** ✅ IGEN
 
@@ -255,5 +252,5 @@ rhetorium/
 
 ---
 
-**Agent signature:** Rhetorium MVP Build Agent - T2.1 Task  
-**Dátum:** 2026.04.20
+**Agent signature:** Rhetorium MVP Build Agent - T2.3 Task  
+**Dátum:** 2026.04.21

@@ -359,9 +359,11 @@ class _ReportsList extends ConsumerWidget {
           itemCount: reports.length,
           itemBuilder: (context, index) {
             final report = reports[index];
+            final reporterName = report['profiles']?['display_name'] ?? report['reporter_id'] ?? 'Ismeretlen';
             return ListTile(
-              title: Text('Típus: ${report['target_type']}'),
-              subtitle: Text('Ok: ${report['reason_code']}'),
+              title: Text('${report['target_type']} jelentés (felhasználó: $reporterName)'),
+              subtitle: Text('ID: ${report['target_id']}\nOk: ${report['reason_code']}'),
+              isThreeLine: true,
               trailing: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -400,6 +402,7 @@ class _ReportsList extends ConsumerWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            Text('Bejelentő: ${report['profiles']?['display_name'] ?? report['reporter_id'] ?? 'Ismeretlen'}'),
             Text('Típus: ${report['target_type']}'),
             Text('ID: ${report['target_id']}'),
             Text('Ok: ${report['reason_code']}'),
@@ -625,15 +628,10 @@ Future<void> _logModerationEvent({
   required String targetId,
   required String actionType,
 }) async {
-  try {
-    await supabase.from('moderation_events').insert({
-      'target_type': targetType,
-      'target_id': targetId,
-      'action_type': actionType,
-      'actor_id': supabase.auth.currentUser!.id,
-    });
-  } catch (e) {
-    // Silent fail for logging - don't break the main flow
-    debugPrint('Moderation event logging failed: $e');
-  }
+  await supabase.from('moderation_events').insert({
+    'target_type': targetType,
+    'target_id': targetId,
+    'action_type': actionType,
+    'actor_id': supabase.auth.currentUser!.id,
+  });
 }
