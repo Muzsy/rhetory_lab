@@ -11,11 +11,15 @@ import '../../features/auth/ui/signup_screen.dart';
 import '../../features/profile/ui/profile_screen.dart';
 import '../ui/main_shell.dart';
 
+import 'router_notifier.dart';
+
 final appRouterProvider = Provider<GoRouter>((ref) {
-  final session = supabase.auth.currentSession;
+  final notifier = ref.watch(routerNotifierProvider);
   
   return GoRouter(
-    initialLocation: session != null ? '/home' : '/login',
+    initialLocation: '/home',
+    refreshListenable: notifier,
+    redirect: notifier.redirect,
     routes: [
       ShellRoute(
         builder: (context, state, child) => MainShell(child: child),

@@ -34,11 +34,13 @@ Futasd le a sémákat a Supabase SQL Editor-ban vagy CLI-vel:
 - `rhetorium/supabase/migrations/001_initial_schema.sql` - Alap séma
 - `rhetorium/supabase/migrations/002_t1_auth_rls_fix.sql` - Auth és RLS javítások
 - `rhetorium/supabase/migrations/003_t1_1_trigger_fix.sql` - Trigger fix
+- `rhetorium/supabase/migrations/004_t2_1_moderation_fix.sql` - Moderáció alapok
+- `rhetorium/supabase/migrations/005_t2_1_rls_fix.sql` - RLS és admin visibility fix
 
 ### 2. Seed Data (Opcionális)
 Futtasd a seed adatokat demo tartalomhoz:
 
-**Fájl:** `rhetorium/supabase/seed/001_seed_data.sql`
+**Fájl:** `rhetorium/supabase/seed.sql`
 
 ### 3. Admin User Létrehozása
 Az admin user manuálisan jön létre:
