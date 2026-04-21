@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../shared/core/supabase_client.dart';
+import '../../admin/providers/admin_providers.dart';
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
@@ -9,6 +10,7 @@ class ProfileScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final user = supabase.auth.currentUser;
+    final isAdmin = ref.watch(isAdminProvider).valueOrNull ?? false;
     
     return Scaffold(
       appBar: AppBar(
@@ -23,13 +25,15 @@ class ProfileScreen extends ConsumerWidget {
             title: Text(user?.email ?? 'Ismeretlen'),
             subtitle: const Text('Email'),
           ),
-          const Divider(),
-          ListTile(
-            leading: const Icon(Icons.admin_panel_settings),
-            title: const Text('Admin felület'),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => context.go('/admin'),
-          ),
+          if (isAdmin) ...[
+            const Divider(),
+            ListTile(
+              leading: const Icon(Icons.admin_panel_settings),
+              title: const Text('Admin felület'),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => context.go('/admin'),
+            ),
+          ],
           const Divider(),
           ListTile(
             leading: const Icon(Icons.logout),

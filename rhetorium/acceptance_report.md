@@ -2,22 +2,21 @@
 
 **Projekt:** Rhetorium MVP  
 **Dátum:** 2026.04.21  
-**Task:** T4.1 - Route guards, runbook/config consistency, final hardening  
-**Státusz:** ✅ TASK ELKÉSZVE (MVP ÁTADÁSRA KÉSZ)
+**Task:** T4.2 - Final documentation alignment + honest readiness wording  
+**Státusz:** ✅ TASK ELKÉSZVE (ERŐSEN KONSZOLIDÁLT MVP)
 
 ---
 
-## T4.1 Task Eredmények (Záró Keményítés)
+## T4.2 Task Eredmények (Záró Finomítás)
 
-### 🔧 Biztonsági és Konzisztencia Javítások
+### 🔧 Dokumentációs és UX Polír
 
 | # | Terület | Megoldás | Státusz |
 |---|----------|---------|---------|
-| 1 | Route Guard hiány | GoRouter `redirect` logika implementálva (auth és admin védelem) | ✅ |
-| 2 | Admin hardening | Az összes `/admin/**` útvonal szigorúan csak admin usernek érhető el | ✅ |
-| 3 | Runbook konzisztencia | `local_run_instructions.md` frissítve a valós migration és seed állapothoz | ✅ |
-| 4 | Supabase config fix | `config.toml` és seed fájlstruktúra szinkronizálva (`supabase/seed.sql`) | ✅ |
-| 5 | T4 Audit lezárás | Az auditban talált összes kritikus és magas prioritású hiba javítva | ✅ |
+| 1 | Runbook struktúra | `local_run_instructions.md` projektstruktúra része frissítve a valós feature-alapú szerkezethez | ✅ |
+| 2 | Readiness wording | Őszinte, konzervatívabb besorolás a build/test bizonyítékok korlátai miatt | ✅ |
+| 3 | Admin entry polish | Az Admin belépési pont a profil oldalon csak admin usernek jelenik meg | ✅ |
+| 4 | Záró Audit lezárás | A T4.1 utáni maradék apró pontatlanságok elhárítva | ✅ |
 
 ---
 
@@ -83,14 +82,17 @@ A [router_notifier.dart](file:///home/muszy/projects/rhetoric_lab/rhetorium/lib/
 
 ## Záró Ítélet
 
-**Repo besorolása:** ✅ **Ténylegesen kész MVP**
+**Repo besorolása:** ✅ **Funkcionálisan közel kész, zárt béta tesztelésre alkalmas MVP**
 
-A T4 audit során talált maradék hiányosságokat a T4.1 task keretében orvosoltuk. A rendszer mind szerveroldalon (RLS), mind UI/Navigáció szinten (Route Guards) védett. A dokumentáció és a konfiguráció szinkronban van a kóddal.
+A T4 audit és a T4.1-T4.2 keményítési körök során a rendszert stabilizáltuk. A kritikus RLS és Route Guard védelmek a helyükön vannak. A kódstruktúra moduláris és követi a feature-alapú elrendezést. A dokumentáció szinkronban van a valósággal.
+
+Mivel a jelenlegi fejlesztői környezet korlátai miatt teljes körű, automatizált build- és tesztbizonyíték nem áll rendelkezésre a repo mellett, a besorolás konzervatív. Az alkalmazás funkcionálisan késznek tekinthető, de az élesítés előtt egy manuális QA és build-verifikációs kör elengedhetetlen.
 
 **Maradék low-priority technikai adósság:**
-1.  Egységtesztek lefedettségének növelése.
-2.  Build-ready állapot véglegesítése valós CI környezetben (ahol a cache írható).
+1.  **Tesztlefedettség:** Az egységtesztek száma alacsony, a jövőbeli karbantarthatóság érdekében növelendő.
+2.  **Build Verifikáció:** A Flutter cache írásvédettsége miatti build- és analyze korlátok feloldása egy tiszta CI/CD környezetben.
+3.  **UX Polish:** További apró kényelmi funkciók (pl. loading indikátorok finomítása).
 
 ---
-**Agent signature:** Rhetorium MVP Build Agent - T4.1 Task  
+**Agent signature:** Rhetorium MVP Build Agent - T4.2 Task  
 **Dátum:** 2026.04.21

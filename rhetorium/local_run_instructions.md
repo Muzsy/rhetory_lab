@@ -104,36 +104,42 @@ flutter build apk --release \
 
 ---
 
-## Projekt Struktúra
+## Projekt Struktúra (Feature-first / Moduláris)
 
 ```
 rhetorium/
 ├── lib/
-│   ├── main.dart                    # App bootstrap
-│   ├── env.dart                     # Environment config (--dart-define)
+│   ├── main.dart                    # Belépési pont
+│   ├── env.dart                     # Környezeti változók kezelése
 │   ├── app/
-│   │   ├── app.dart                 # MaterialApp
-│   │   └── router/
-│   │       └── app_router.dart      # GoRouter config
+│   │   ├── app.dart                 # MaterialApp alapok
+│   │   ├── router/
+│   │   │   ├── app_router.dart      # GoRouter definíciók
+│   │   │   └── router_notifier.dart # Route Guard-ok (Auth & Admin)
+│   │   └── ui/
+│   │       └── main_shell.dart      # Navigációs váz (BottomNav)
 │   ├── features/
-│   │   ├── scenario/
-│   │   │   ├── scenario_list_screen.dart
-│   │   │   └── scenario_detail_screen.dart
-│   │   └── admin/
-│   │       ├── admin_screen.dart
-│   │       └── create_scenario_screen.dart
-│   └── shared/
+│   │   ├── admin/                   # Adminisztrációs modul
+│   │   │   ├── providers/           # Admin specifikus Riverpod állapot
+│   │   │   ├── services/            # Moderációs és logolási szolgáltatások
+│   │   │   └── ui/
+│   │   │       ├── tabs/            # Moderációs al-lapok (reports, scenarios stb.)
+│   │   │       ├── admin_screen.dart
+│   │   │       └── create_scenario_screen.dart
+│   │   ├── auth/                    # Hitelesítési modul
+│   │   │   └── ui/                  # Login és Signup képernyők
+│   │   ├── profile/                 # Profil modul
+│   │   │   └── ui/                  # Profil képernyő és admin belépési pont
+│   │   └── scenario/                # Szituációs modul
+│   │       ├── providers/           # Szituáció specifikus állapot
+│   │       └── ui/                  # Lista és részletes nézet
+│   └── shared/                      # Közös szolgáltatások
 │       └── core/
 │           └── supabase_client.dart
 ├── supabase/
-│   ├── migrations/
-│   │   ├── 001_initial_schema.sql
-│   │   ├── 002_t1_auth_rls_fix.sql
-│   │   └── 003_t1_1_trigger_fix.sql
-│   └── seed/
-│       └── 001_seed_data.sql
-└── integration_test/
-    └── auth_flow_test.dart
+│   ├── migrations/                  # Adatbázis sémák (001-005)
+│   └── seed.sql                     # Lokális demo adatok
+└── integration_test/                # E2E / Flow tesztek
 ```
 
 ---
