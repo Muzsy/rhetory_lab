@@ -6,7 +6,8 @@ import '../../features/admin/providers/admin_providers.dart';
 
 class RouterNotifier extends ChangeNotifier {
   RouterNotifier(this._ref) {
-    _subscription = supabase.auth.onAuthStateChange.listen((data) {
+    final client = _ref.read(supabaseClientProvider);
+    _subscription = client.auth.onAuthStateChange.listen((data) {
       notifyListeners();
     });
   }
@@ -21,7 +22,8 @@ class RouterNotifier extends ChangeNotifier {
   }
 
   Future<String?> redirect(BuildContext context, GoRouterState state) async {
-    final session = supabase.auth.currentSession;
+    final client = _ref.read(supabaseClientProvider);
+    final session = client.auth.currentSession;
     final isLoggingIn = state.matchedLocation == '/login' || state.matchedLocation == '/signup';
 
     // 1. Ha nincs bejelentkezve és nem login/signup oldalon van -> login

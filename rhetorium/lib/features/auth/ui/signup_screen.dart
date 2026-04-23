@@ -32,13 +32,14 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
     });
 
     try {
-      final response = await supabase.auth.signUp(
+      final client = ref.read(supabaseClientProvider);
+      final response = await client.auth.signUp(
         email: _emailController.text.trim(),
         password: _passwordController.text,
       );
 
       if (response.user != null) {
-        await supabase.from('profiles').insert({
+        await client.from('profiles').insert({
           'id': response.user!.id,
           'display_name': _displayNameController.text.trim(),
         });

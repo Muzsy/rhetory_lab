@@ -30,7 +30,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     });
 
     try {
-      final response = await supabase.auth.signInWithPassword(
+      final client = ref.read(supabaseClientProvider);
+      final response = await client.auth.signInWithPassword(
         email: _emailController.text.trim(),
         password: _passwordController.text,
       );

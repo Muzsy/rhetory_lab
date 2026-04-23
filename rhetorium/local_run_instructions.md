@@ -144,6 +144,39 @@ rhetorium/
 
 ---
 
+## Tesztelés
+
+A projekt tartalmaz egység-, widget- és integrációs teszteket.
+
+### Egység- és Widget tesztek
+Ezek a tesztek lokálisan, eszköz nélkül futtathatók:
+
+```bash
+cd rhetorium
+flutter test
+```
+
+**Lefedett területek:**
+- `test/features/auth/`: Login és Signup képernyők renderelése
+- `test/app/router/`: Route Guard logika (Auth és Admin redirect szabályok)
+
+### Integrációs tesztek
+Ezek a tesztek valódi eszközön vagy emulátoron futnak, és a Supabase-szel kommunikálnak:
+
+```bash
+cd rhetorium
+# Futtatás alapértelmezett eszközön
+flutter test integration_test/auth_flow_test.dart --dart-define-from-file=../.env.local
+
+# Futtatás konkrét eszközön (pl. fizikai telefon)
+flutter test integration_test/auth_flow_test.dart --dart-define-from-file=../.env.local -d <DEVICE_ID>
+```
+
+**Lefedett területek:**
+- `integration_test/auth_flow_test.dart`: Teljes regisztrációs folyamat, navigáció ellenőrzése és kijelentkezés.
+
+---
+
 ## Hibaelhárítás
 
 ### "SUPABASE_URL is not set" hiba
