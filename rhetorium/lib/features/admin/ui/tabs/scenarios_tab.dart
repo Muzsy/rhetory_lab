@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../shared/core/supabase_client.dart';
 import '../../providers/admin_providers.dart';
 import '../../services/moderation_service.dart';
-import 'dart:io';
 
 class ScenariosTab extends ConsumerWidget {
   const ScenariosTab({super.key});
