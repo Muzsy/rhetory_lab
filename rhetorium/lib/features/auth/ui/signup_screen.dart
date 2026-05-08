@@ -33,17 +33,17 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
 
     try {
       final client = ref.read(supabaseClientProvider);
+      // data is stored in auth.users.raw_user_meta_data.
+      // Migration 007 (handle_new_user trigger) reads display_name from
+      // raw_user_meta_data->>'display_name' and inserts it into public.profiles.
       final response = await client.auth.signUp(
         email: _emailController.text.trim(),
         password: _passwordController.text,
+        data: {'display_name': _displayNameController.text.trim()},
       );
 
-      if (response.user != null) {
-        await client.from('profiles').insert({
-          'id': response.user!.id,
-          'display_name': _displayNameController.text.trim(),
-        });
-        if (mounted) context.go('/home');
+      if (response.user != null && mounted) {
+        context.go('/home');
       }
     } catch (e) {
       setState(() => _error = e.toString());
